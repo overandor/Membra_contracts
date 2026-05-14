@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MEMBRA Canonical Event Schemas",
+  "description": "Devnet-first canonical schemas for MEMBRA proof, listing, campaign, relay, wallet, and payout eligibility events. These schemas do not authorize real-funds movement.",
+  "definitions": {
+    "id": {"type": "string", "minLength": 3},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "moneyUsd": {"type": "number", "minimum": 0},
+    "consentScope": {"type": "string", "minLength": 8},
+    "metadata": {"type": "object", "additionalProperties": true}
+  },
+  "oneOf": [
+    {"$ref": "#/$defs/asset_registered"},
+    {"$ref": "#/$defs/listing_created"},
+    {"$ref": "#/$defs/proof_submitted"},
+    {"$ref": "#/$defs/proof_reviewed"},
+    {"$ref": "#/$defs/campaign_created"},
+    {"$ref": "#/$defs/relay_job_created"},
+    {"$ref": "#/$defs/wallet_event_recorded"},
+    {"$ref": "#/$defs/payout_eligibility_created"}
+  ],
+  "$defs": {
+    "base": {
+      "type": "object",
+      "required": ["event_id", "event_type", "created_at"],
+      "properties": {
+        "event_id": {"$ref": "#/definitions/id"},
+        "event_type": {"type": "string"},
+        "created_at": {"$ref": "#/definitions/timestamp"},
+        "metadata": {"$ref": "#/definitions/metadata"}
+      }
+    },
+    "asset_registered": {
+      "allOf": [{"$ref": "#/$defs/base"}, {"type": "object", "required": ["owner_id", "asset_id", "asset_type", "consent_scope"], "properties": {"event_type": {"const": "asset_registered"}, "owner_id": {"$ref": "#/definitions/id"}, "asset_id": {"$ref": "#/definitions/id"}, "asset_type": {"type": "string"}, "consent_scope": {"$ref": "#/definitions/consentScope"}}}]
+    },
+    "listing_created": {
+      "allOf": [{"$ref": "#/$defs/base"}, {"type": "object", "required": ["listing_id", "asset_id", "listing_type", "price_usd"], "properties": {"event_type": {"const": "listing_created"}, "listing_id": {"$ref": "#/definitions/id"}, "asset_id": {"$ref": "#/definitions/id"}, "listing_type": {"type": "string"}, "price_usd": {"$ref": "#/definitions/moneyUsd"}}}]
+    },
+    "proof_submitted": {
+      "allOf": [{"$ref": "#/$defs/base"}, {"type": "object", "required": ["proof_id", "subject_type", "subject_id", "proof_hash", "consent_scope"], "properties": {"event_type": {"const": "proof_submitted"}, "proof_id": {"$ref": "#/definitions/id"}, "subject_type": {"type": "string"}, "subject_id": {"$ref": "#/definitions/id"}, "proof_hash": {"type": "string", "minLength": 32}, "evidence_url": {"type": "string"}, "consent_scope": {"$ref": "#/definitions/consentScope"}}}]
+    },
+    "proof_reviewed": {
+      "allOf": [{"$ref": "#/$defs/base"}, {"type": "object", "required": ["proof_id", "status", "reviewer"], "properties": {"event_type": {"const": "proof_reviewed"}, "proof_id": {"$ref": "#/definitions/id"}, "status": {"enum": ["approved", "rejected", "needs_more_evidence", "fraud_hold", "archived"]}, "reviewer": {"type": "string"}, "notes": {"type": "string"}}}]
+    },
+    "campaign_created": {
+      "allOf": [{"$ref": "#/$defs/base"}, {"type": "object", "required": ["campaign_id", "advertiser_id", "budget_usd"], "properties": {"event_type": {"const": "campaign_created"}, "campaign_id": {"$ref": "#/definitions/id"}, "advertiser_id": {"$ref": "#/definitions/id"}, "budget_usd": {"$ref": "#/definitions/moneyUsd"}}}]
+    },
+    "relay_job_created": {
+      "allOf": [{"$ref": "#/$defs/base"}, {"type": "object", "required": ["relay_id", "requester_id", "pickup_node", "dropoff_node"], "properties": {"event_type": {"const": "relay_job_created"}, "relay_id": {"$ref": "#/definitions/id"}, "requester_id": {"$ref": "#/definitions/id"}, "pickup_node": {"type": "string"}, "dropoff_node": {"type": "string"}, "mode": {"type": "string"}}}]
+    },
+    "wallet_event_recorded": {
+      "allOf": [{"$ref": "#/$defs/base"}, {"type": "object", "required": ["ledger_event_id", "user_id", "subject_type", "subject_id", "amount_usd", "status"], "properties": {"event_type": {"const": "wallet_event_recorded"}, "ledger_event_id": {"$ref": "#/definitions/id"}, "user_id": {"$ref": "#/definitions/id"}, "subject_type": {"type": "string"}, "subject_id": {"$ref": "#/definitions/id"}, "amount_usd": {"$ref": "#/definitions/moneyUsd"}, "status": {"type": "string"}}}]
+    },
+    "payout_eligibility_created": {
+      "allOf": [{"$ref": "#/$defs/base"}, {"type": "object", "required": ["payout_event_id", "user_id", "subject_type", "subject_id", "eligible_amount_usd", "status"], "properties": {"event_type": {"const": "payout_eligibility_created"}, "payout_event_id": {"$ref": "#/definitions/id"}, "user_id": {"$ref": "#/definitions/id"}, "subject_type": {"type": "string"}, "subject_id": {"$ref": "#/definitions/id"}, "eligible_amount_usd": {"$ref": "#/definitions/moneyUsd"}, "status": {"const": "eligible_pending_external_settlement"}}}]
+    }
+  }
+}
